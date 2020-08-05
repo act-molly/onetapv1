@@ -207,6 +207,7 @@ function create_multidropdown(title, x, y, array, opened, selectedoptions) {
     var cury = curPos[1];
     var displayValue = "";
     var clicked = false;
+    var needclosed = false;
 
     create_string(x, y, 0, title, [255, 255, 255, 255]);
     Render.FilledRect(x, y + 12, 170, 20, [51, 51, 51, 255]);
@@ -228,16 +229,30 @@ function create_multidropdown(title, x, y, array, opened, selectedoptions) {
         }
         displayValue = array[selectedoptions[keepvalue]] + ", ...";
     }
+    if (displayValue == "")
+        displayValue = "none";
     create_string(x + 5, y + 16, 0, displayValue, [150, 150, 150, 255]);
+    var text_col = [150, 150, 150, 255];
     Render.Polygon([[x + 155, y + 20], [x + 165, y + 20], [x + 160, y + 25]], [150, 150, 150, 255]);
 
     if (curx > x && curx < x + 170 && cury > y + 12 && cury < y + 32) {
         Render.Polygon([[x + 155, y + 20], [x + 165, y + 20], [x + 160, y + 25]], [245, 197, 99, 255]);
+        text_col = [245, 197, 99, 255];
         if (Input.IsKeyPressed(0x01) && Globals.Realtime() > globaltime + 0.2) {
             globaltime = Globals.Realtime();
-            return "closed";
+            needclosed = true;
         }
     }
+
+    Render.FilledRect(x + 160, y + 20, 5, 2, [51, 51, 51, 255]);
+    Render.Line(x + 161, y + 16, x + 164, y + 16, text_col);
+    Render.Line(x + 164, y + 16, x + 164, y + 18, text_col);
+    Render.Line(x + 164, y + 18, x + 161, y + 18, text_col);
+    Render.Line(x + 161, y + 18, x + 161, y + 20, text_col);
+    Render.Line(x + 161, y + 20, x + 164, y + 20, text_col);
+
+    if (needclosed)
+        return "closed";
 
     if (opened) {
         indropdown = true;
@@ -367,6 +382,7 @@ function main() {
             controls_checkbox = create_checkbox("checkbox", ax, sy + 20, controls_checkbox);
             controls_slider = create_slider("slider", ax, sy + 35, -100, 100, controls_slider[1], "hp");
             controls_keybind = create_keybind("keybind", ax, sy + 110, controls_keybind);
+
             var dropdown = create_dropdown("dropdown", ax, sy + 70, controls_array, controls_array_opened, controls_array_selectedoption);
             if (dropdown != undefined) {
                 if (dropdown == "closed") {
