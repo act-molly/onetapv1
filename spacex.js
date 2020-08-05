@@ -21,6 +21,9 @@ var controls_slider = [0, 0];
 var controls_array_opened = false;
 var controls_array_selectedoption = 1;
 var controls_array = ["option 1", "option 2", "option 3"];
+var controls_multiarray_opened = false;
+var controls_multiarray_selectedoptions = [];
+var controls_multiarray = ["lorum ipsum", "dolor sit", "consectetur adipiscing", "sed do", "eiusmod tempor", "reprehenderit in"];
 var controls_keybind = 0x01;
 
 var globaltime = Globals.Realtime();
@@ -188,6 +191,92 @@ function create_dropdown(title, x, y, array, opened, selectedoption) {
     }
 }
 
+Array.prototype.contains = function (obj) {
+    var i = this.length;
+    while (i--) {
+        if (this[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function create_multidropdown(title, x, y, array, opened, selectedoptions) {
+    var curPos = Input.GetCursorPosition();
+    var curx = curPos[0];
+    var cury = curPos[1];
+    var displayValue = "";
+    var clicked = false;
+
+    create_string(x, y, 0, title, [255, 255, 255, 255]);
+    Render.FilledRect(x, y + 12, 170, 20, [51, 51, 51, 255]);
+    Render.Rect(x, y + 12, 170, 20, [0, 0, 0, 255]);
+    for (i = 0; i < array.length; i++) {
+        if (selectedoptions.contains(i)) {
+            displayValue += array[i] + ", ";
+        }
+    }
+    displayValue = displayValue.substring(0, displayValue.length - 2);
+    var font = Render.AddFont("Small Fonts", 7, 300);
+    var displaysizex = Render.TextSizeCustom(displayValue, font)[0];
+    var keepvalue = -1;
+    if (displaysizex > 160) {
+        for (i = 0; i < selectedoptions.length; i++) {
+            if (selectedoptions[i] != undefined && keepvalue == -1) {
+                keepvalue = i;
+            }
+        }
+        displayValue = array[selectedoptions[keepvalue]] + ", ...";
+    }
+    create_string(x + 5, y + 16, 0, displayValue, [150, 150, 150, 255]);
+    Render.Polygon([[x + 155, y + 20], [x + 165, y + 20], [x + 160, y + 25]], [150, 150, 150, 255]);
+
+    if (curx > x && curx < x + 170 && cury > y + 12 && cury < y + 32) {
+        Render.Polygon([[x + 155, y + 20], [x + 165, y + 20], [x + 160, y + 25]], [245, 197, 99, 255]);
+        if (Input.IsKeyPressed(0x01) && Globals.Realtime() > globaltime + 0.2) {
+            globaltime = Globals.Realtime();
+            return "closed";
+        }
+    }
+
+    if (opened) {
+        indropdown = true;
+        Render.FilledRect(x, y + 35, 170, array.length * 17 + 3, [51, 51, 51, 255]);
+        Render.Rect(x, y + 35, 170, array.length * 17 + 3, [0, 0, 0, 255]);
+        for (i = 0; i < array.length; i++) {
+            if (selectedoptions.contains(i)) {
+                create_string(x + 5, y + 40 + (16 * i), 0, array[i], [245, 197, 99, 255]);
+            } else {
+                create_string(x + 5, y + 40 + (16 * i), 0, array[i], [255, 255, 255, 255]);
+            }
+            if (curx > x && curx < x + 170 && cury > y + 40 + (16 * i) && cury < y + 40 + (16 * i) + 15) {
+                create_string(x + 5, y + 40 + (16 * i), 0, array[i], [245, 197, 99, 255]);
+                if (Input.IsKeyPressed(0x01) && Globals.Realtime() > globaltime + 0.2) {
+                    globaltime = Globals.Realtime();
+                    if (selectedoptions.contains(i)) {
+                        delete selectedoptions[i];
+                    } else {
+                        selectedoptions[i] = i;
+                    }
+                    clicked = true;
+                }
+            }
+        }
+        if (clicked)
+            return selectedoptions;
+    } else {
+        indropdown = false;
+    }
+
+    if (Input.IsKeyPressed(0x01) && Globals.Realtime() > globaltime + 0.2 && opened) {
+        globaltime = Globals.Realtime();
+        if (curx < x || curx > x + 170 || cury < y + 35 || cury > y + 35 + array.length * 17 + 3) {
+            return "closed";
+        }
+    }
+
+}
+
 function inbox(curx, minx, maxx, cury, miny, minx) {
     if (curx > minx && curx < maxx && cury > miny && cury < minx && !indropdown)
         return true;
@@ -241,7 +330,7 @@ function main() {
     var font = Render.AddFont("Proxima Nova Bold", 10, 900);
     var mTitle = __filename;
     Render.StringCustom(x + 40, y + 14, 0, mTitle, [255, 255, 255, 100], font);
-    if (create_tab("legit", x + 180, y + 15, legittab)) {
+    if (create_tab("spacex", x + 180, y + 15, legittab)) {
         cleartabs();
         legittab = !legittab;
     }
@@ -288,6 +377,14 @@ function main() {
                 }
             }
 
+            var multidropdown = create_multidropdown("multidropdown", ax, sy + 150, controls_multiarray, controls_multiarray_opened, controls_multiarray_selectedoptions);
+            if (multidropdown != undefined) {
+                if (multidropdown == "closed") {
+                    controls_multiarray_opened = !controls_multiarray_opened;
+                } else {
+                    controls_multiarray_selectedoptions = multidropdown;
+                }
+            }
         }
     }
 
